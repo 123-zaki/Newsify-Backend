@@ -1,0 +1,123 @@
+import { ApiError } from "../utils/ApiError.js";
+import User from "../models/user.model.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import jwt from "jsonwebtoken";
+
+export const login = asyncHandler(async (req, res) => {
+  console.log("Login Called");
+  const { username, email, password } = req.body;
+  if (!password) {
+    res.status(400).json(new ApiResponse(400, null, "Password is required"));
+  }
+  if (!username && !email) {
+    res
+      .status(400)
+      .json(new ApiResponse(400, null, "Email or username is required"));
+  }
+
+  const criteria = email ? { email } : { username };
+
+  const existingUser = await User.findOne(criteria);
+  if (!existingUser) {
+    res
+      .status(404)
+      .json(
+        new ApiResponse(
+          404,
+          null,
+          "User not found, If you don't have a registered account, Please register your account first"
+        )
+      );
+  }
+
+  const isMatch = await existingUser.comparePassword(password);
+  if (!isMatch) {
+    res.status(401).json(new ApiResponse(401,null, "Invalid credentials"));
+  }
+
+  const token = jwt.sign({ _id: existingUser._id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+
+  const userObj = existingUser.toObject
+    ? existingUser.toObject()
+    : { ...existingUser };
+  delete userObj.password;
+
+  return res
+    .cookie("jwtToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .status(200)
+    .json(
+      new ApiResponse(200, { user: userObj }, "User logged in successfully")
+    );
+});
+
+export const register = asyncHandler(async (req, res) => {
+  console.log("Called");
+  const { username, email, password, dateOfBirth, mobileNumber } = req.body;
+  if (!username || !email || !password || !dateOfBirth) {
+    throw new ApiError(400, "All fields are required!");
+  }
+
+  const existingUserWithEmail = await User.findOne({ email });
+  if (existingUserWithEmail) {
+    throw new ApiError(409, "User with this email already exists!");
+  }
+
+  const existingUserWithUsername = await User.findOne({ username });
+  if (existingUserWithUsername) {
+    throw new ApiError(409, "User with this username already exists!");
+  }
+
+  const newUser = await User.create({
+    username,
+    email,
+    password,
+    dateOfBirth,
+    mobileNumber,
+  });
+
+  const userObj = newUser.toObject ? newUser.toObject() : { ...newUser };
+  delete userObj.password;
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, { user: userObj }, "User registered successfully")
+    );
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  console.log("first");
+  res.status(200).json({ Hi: "Hi! How are you?" });
+});
+
+export const getProfile = asyncHandler(async (req, res) => {
+  console.log("Called me");
+  const user = req.user;
+  if (!user) {
+    throw new ApiError(401, "Unauthorized access");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Profile fetched successfully"));
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  const user = req.user;
+  res.clearCookie("jwtToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  req
+    .status(200)
+    .json(new ApiResponse(200, null, "User logged out successfully"));
+});
