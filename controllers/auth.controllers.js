@@ -60,17 +60,17 @@ export const register = asyncHandler(async (req, res) => {
   console.log("Called");
   const { username, email, password, dateOfBirth, mobileNumber } = req.body;
   if (!username || !email || !password || !dateOfBirth) {
-    throw new ApiError(400, "All fields are required!");
+    return res.status(400).json(new ApiError(400, "All fields are required!"));
   }
 
   const existingUserWithEmail = await User.findOne({ email });
   if (existingUserWithEmail) {
-    throw new ApiError(409, "User with this email already exists!");
+    return  res.status(409).json(new ApiError(409, "User with this email already exists!"));
   }
 
   const existingUserWithUsername = await User.findOne({ username });
   if (existingUserWithUsername) {
-    throw new ApiError(409, "User with this username already exists!");
+    return res.status(409).json(new ApiError(409, "User with this username already exists!"));
   }
 
   const newUser = await User.create({
@@ -100,7 +100,7 @@ export const getProfile = asyncHandler(async (req, res) => {
   console.log("Called me");
   const user = req.user;
   if (!user) {
-    throw new ApiError(401, "Unauthorized access");
+    return res.status(401).json(ApiError(401, "Unauthorized access"));
   }
   return res
     .status(200)
@@ -115,7 +115,7 @@ export const logout = asyncHandler(async (req, res) => {
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-  req
+  return  res
     .status(200)
     .json(new ApiResponse(200, null, "User logged out successfully"));
 });
