@@ -11,7 +11,7 @@ export const login = asyncHandler(async (req, res) => {
     res.status(400).json(new ApiResponse(400, null, "Password is required"));
   }
   if (!username && !email) {
-    res
+    return res
       .status(400)
       .json(new ApiResponse(400, null, "Email or username is required"));
   }
@@ -20,7 +20,7 @@ export const login = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne(criteria);
   if (!existingUser) {
-    res
+    return res
       .status(404)
       .json(
         new ApiResponse(
@@ -33,7 +33,7 @@ export const login = asyncHandler(async (req, res) => {
 
   const isMatch = await existingUser.comparePassword(password);
   if (!isMatch) {
-    res.status(401).json(new ApiResponse(401,null, "Invalid credentials"));
+    return res.status(401).json(new ApiResponse(401,null, "Invalid credentials"));
   }
 
   const token = jwt.sign({ _id: existingUser._id }, process.env.JWT_SECRET, {
@@ -49,13 +49,11 @@ export const login = asyncHandler(async (req, res) => {
     .cookie("jwtToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
     .status(200)
-    .json(
-      new ApiResponse(200, { user: userObj }, "User logged in successfully")
-    );
+    .json(new ApiResponse(200, { user: userObj }, "User logged in successfully"));
 });
 
 export const register = asyncHandler(async (req, res) => {
