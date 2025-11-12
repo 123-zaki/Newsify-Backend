@@ -111,9 +111,9 @@ export const logout = asyncHandler(async (req, res) => {
   const user = req.user;
   res.clearCookie("jwtToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   return  res
     .status(200)
