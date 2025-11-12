@@ -8,7 +8,7 @@ export const login = asyncHandler(async (req, res) => {
   console.log("Login Called");
   const { username, email, password } = req.body;
   if (!password) {
-    res.status(400).json(new ApiResponse(400, null, "Password is required"));
+    return  res.status(400).json(new ApiResponse(400, null, "Password is required"));
   }
   if (!username && !email) {
     return res
@@ -47,11 +47,12 @@ export const login = asyncHandler(async (req, res) => {
 
   return res
     .cookie("jwtToken", token, {
-      httpOnly: true,
+    httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+      path: '/'
+  })
     .status(200)
     .json(new ApiResponse(200, { user: userObj }, "User logged in successfully"));
 });
@@ -112,8 +113,9 @@ export const logout = asyncHandler(async (req, res) => {
   res.clearCookie("jwtToken", {
     httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/'
   });
   return  res
     .status(200)

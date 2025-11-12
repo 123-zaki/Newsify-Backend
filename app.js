@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(cors({
-    origin: "https://newsify-frontend-xfif.vercel.app",
+    origin: ["http://localhost:5173", "https://newsify-frontend-xfif.vercel.app"],
     credentials: true
 }));
 
