@@ -37,21 +37,17 @@ const userSchema = new mongoose.Schema(
       match: [/^\d{10,15}$/, "Please enter a valid mobile number (digits only)"],
     },
     location: {
-      // latitude: {
-      //   type: Number,
-      // },
-      // longitude: {
-      //   type: Number,
-      // },
+      /* GeoJSON point. Do NOT set a default 'type' value here — if a document
+         gets a `location.type` without `location.coordinates` the 2dsphere
+         index will reject the insert. Only set `location` when you have valid
+         coordinates (an array: [lng, lat]). */
       type: {
-            type: String,
-            enum: ["Point"],
-            default: "Point"
-        },
-        coordinates: {
-            type: [Number],
-            required: true
-        }
+        type: String,
+        enum: ["Point"],
+      },
+      coordinates: {
+        type: [Number],
+      },
     },
     role: {
         type: String,
@@ -65,7 +61,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.index({location: '2dsphere'});
+// Create the 2dsphere index only for documents that actually have coordinates.
+// This avoids MongoDB complaining when a document contains an incomplete
+// GeoJSON object (e.g. type present but coordinates missing).
+userSchema.index({ location: '2dsphere' }, { partialFilterExpression: { 'location.coordinates': { $exists: true } } });
 
 userSchema.pre("save", async function(next) {
     if(this.isModified('password')) {
