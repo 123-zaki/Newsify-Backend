@@ -67,7 +67,9 @@ export const register = asyncHandler(async (req, res) => {
   console.log("Called");
   const { username, email, password, dateOfBirth, mobileNumber } = req.body;
   if (!username || !email || !password || !dateOfBirth) {
-    return res.status(400).json(new ApiError(400, "All fields are required!"));
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "All fields are required!"));
   }
 
   try {
@@ -75,14 +77,18 @@ export const register = asyncHandler(async (req, res) => {
     if (existingUserWithEmail) {
       return res
         .status(409)
-        .json(new ApiError(409, "User with this email already exists!"));
+        .json(
+          new ApiResponse(409, null, "User with this email already exists!")
+        );
     }
 
     const existingUserWithUsername = await User.findOne({ username });
     if (existingUserWithUsername) {
       return res
         .status(409)
-        .json(new ApiError(409, "User with this username already exists!"));
+        .json(
+          new ApiResponse(409, null, "User with this username already exists!")
+        );
     }
 
     const newUser = await User.create({
@@ -114,9 +120,11 @@ export const register = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     console.log("Error: ", error.message);
-    return res.status(500).json(
-      new ApiResponse(500, null, "Internal server error: ", error.message)
-    );
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(500, null, "Internal server error: ", error.message)
+      );
   }
 });
 
@@ -129,7 +137,7 @@ export const getProfile = asyncHandler(async (req, res) => {
   console.log("Called me");
   const user = req.user;
   if (!user) {
-    return res.status(401).json(ApiError(401, "Unauthorized access"));
+    return res.status(401).json(ApiResponse(401, null, "Unauthorized access"));
   }
   return res
     .status(200)
