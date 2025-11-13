@@ -35,7 +35,7 @@ export const uploadNews = asyncHandler(async (req, res) => {
 
     //----> memoryStorage (for vercel prod)
     if(image && image.buffer) {
-        const response = await uploadOnCloudinary(image.path);
+        const response = await uploadOnCloudinary(image.buffer);
         urlToImage = response.secure_url;
     }
 
