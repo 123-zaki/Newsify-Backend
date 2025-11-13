@@ -59,7 +59,7 @@ export const login = asyncHandler(async (req, res) => {
     })
     .status(200)
     .json(
-      new ApiResponse(200, { user: userObj }, "User logged in successfully")
+      new ApiResponse(200, { user: userObj, token }, "User logged in successfully")
     );
 });
 
@@ -116,7 +116,7 @@ export const register = asyncHandler(async (req, res) => {
       })
       .status(201)
       .json(
-        new ApiResponse(201, { user: userObj }, "User registered successfully")
+        new ApiResponse(201, { user: userObj, token }, "User registered successfully")
       );
   } catch (error) {
     console.log("Error: ", error.message);
