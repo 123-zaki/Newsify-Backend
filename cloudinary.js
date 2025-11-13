@@ -1,47 +1,78 @@
+// import { v2 as cloudinary } from "cloudinary";
+// import fs from "fs"; //file system (in nodejs) for read,write,etc.
+// import dotenv from "dotenv";
+
+// dotenv.config();
+
+// cloudinary.config({
+//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+//   api_key: process.env.CLOUDINARY_API_KEY,
+//   api_secret: process.env.CLOUDINARY_API_SECRET,
+// });
+
+// // const uploadOnCloudinary = async (localFilePath) => {
+// //   try {
+// //     if (!localFilePath) return null;
+
+// //     //upload the file on cloudinary
+// //     const response = await cloudinary.uploader.upload(localFilePath, {
+// //       resource_type: "auto",
+// //     });
+
+// //     //file has been uploaded successfully
+// //     //console.log("file is uploaded on cloudinary", response.url);
+// //     fs.unlinkSync(localFilePath); //wait untill unlink done
+// //     return response;
+// //   } catch (error) {
+// //     fs.unlinkSync(localFilePath); //it will remove the locally saved temporary file as the upload operation got failed
+// //   }
+// // };
+
+// const uploadOnCloudinary = async (localFilePath) => {
+//   try {
+//     const response = await cloudinary.uploader.upload(localFilePath, {
+//       resource_type: 'auto',
+//       folder: 'newsify_uploads'
+//     });
+
+//     console.log("File successfully uploaded on cloudinary: ", response.url);
+//     fs.unlinkSync(localFilePath);
+//     return response;
+//   } catch (error) {
+//     console.log("Error while uploading file on cloudinary: ", error.message);
+//     fs.unlinkSync(localFilePath);
+//   }
+// }
+
+// export { uploadOnCloudinary };
+
+
+
+// ----------> 
+// cloudinary.js
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs"; //file system (in nodejs) for read,write,etc.
 import dotenv from "dotenv";
+import streamifier from "streamifier";
 
 dotenv.config();
 
+// Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// const uploadOnCloudinary = async (localFilePath) => {
-//   try {
-//     if (!localFilePath) return null;
-
-//     //upload the file on cloudinary
-//     const response = await cloudinary.uploader.upload(localFilePath, {
-//       resource_type: "auto",
-//     });
-
-//     //file has been uploaded successfully
-//     //console.log("file is uploaded on cloudinary", response.url);
-//     fs.unlinkSync(localFilePath); //wait untill unlink done
-//     return response;
-//   } catch (error) {
-//     fs.unlinkSync(localFilePath); //it will remove the locally saved temporary file as the upload operation got failed
-//   }
-// };
-
-const uploadOnCloudinary = async (localFilePath) => {
-  try {
-    const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: 'auto',
-      folder: 'newsify_uploads'
-    });
-
-    console.log("File successfully uploaded on cloudinary: ", response.url);
-    fs.unlinkSync(localFilePath);
-    return response;
-  } catch (error) {
-    console.log("Error while uploading file on cloudinary: ", error.message);
-    fs.unlinkSync(localFilePath);
-  }
-}
-
-export { uploadOnCloudinary };
+// Upload buffer to Cloudinary
+export const uploadOnCloudinary = (buffer, folder = "newsify_uploads") => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (result) resolve(result);
+        else reject(error);
+      }
+    );
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
